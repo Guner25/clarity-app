@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { WelcomeScreen } from './components/WelcomeScreen';
+import { HomeScreen } from './components/HomeScreen';
 import { InputScreen } from './components/InputScreen';
 import { CategoryScreen } from './components/CategoryScreen';
 import { QuestionScreen } from './components/QuestionScreen';
@@ -11,7 +12,7 @@ import { AppState, CategoryType } from './types';
 const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [state, setState] = useState<AppState>({
-    step: 'welcome',
+    step: 'welcome', // Default, will be updated by useEffect
     initialInput: '',
     selectedCategory: null,
     aiQuestion: null,
@@ -23,7 +24,6 @@ const App: React.FC = () => {
 
   // Theme Management
   useEffect(() => {
-    // Check system preference initially
     if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
       setIsDarkMode(true);
     }
@@ -37,10 +37,35 @@ const App: React.FC = () => {
     }
   }, [isDarkMode]);
 
+  // First Time Visitor Check
+  useEffect(() => {
+    const hasVisited = localStorage.getItem('clarity_has_visited');
+    if (hasVisited === 'true') {
+        setState(prev => ({ ...prev, step: 'home' }));
+    }
+    // If not visited, it stays 'welcome' by default
+  }, []);
+
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
   // App Logic
-  const handleStart = () => setState(prev => ({ ...prev, step: 'input' }));
+  const handleWelcomeComplete = () => {
+    localStorage.setItem('clarity_has_visited', 'true');
+    setState(prev => ({ ...prev, step: 'home' }));
+  };
+
+  const handleStartAnalysis = () => {
+      setState(prev => ({ 
+        ...prev, 
+        step: 'input',
+        // Reset analysis state
+        initialInput: '',
+        selectedCategory: null,
+        aiQuestion: null,
+        userAnswer: null,
+        analysis: null
+      }));
+  };
 
   const handleInputSubmit = (text: string) => {
     setState(prev => ({ ...prev, initialInput: text, step: 'category' }));
@@ -90,7 +115,7 @@ const App: React.FC = () => {
 
   const handleHome = () => {
       setState({
-        step: 'welcome',
+        step: 'home',
         initialInput: '',
         selectedCategory: null,
         aiQuestion: null,
@@ -102,9 +127,12 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-full bg-slate-50 dark:bg-[#101922] text-slate-900 dark:text-white font-sans overflow-hidden transition-colors duration-500">
+    <div className="h-[100dvh] w-full bg-slate-50 dark:bg-[#101922] text-slate-900 dark:text-white font-sans overflow-hidden transition-colors duration-500">
       {state.step === 'welcome' && (
-        <WelcomeScreen onStart={handleStart} isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
+        <WelcomeScreen onStart={handleWelcomeComplete} isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
+      )}
+      {state.step === 'home' && (
+        <HomeScreen onStartAnalysis={handleStartAnalysis} isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
       )}
       {state.step === 'input' && (
         <InputScreen onNext={handleInputSubmit} onBack={handleHome} isDarkMode={isDarkMode} toggleTheme={toggleTheme} />

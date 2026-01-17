@@ -7,7 +7,7 @@ export interface ClarityAnalysis {
 export type CategoryType = 'work' | 'relationships' | 'self' | 'health' | 'money' | 'unsure';
 
 export interface AppState {
-  step: 'welcome' | 'input' | 'category' | 'question' | 'summary' | 'share';
+  step: 'welcome' | 'home' | 'input' | 'category' | 'question' | 'summary' | 'share';
   initialInput: string;
   selectedCategory: CategoryType | null;
   aiQuestion: string | null;
